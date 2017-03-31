@@ -1,3 +1,6 @@
+# Author: Ben Brewer
+# Date created: March 31, 2017
+
 # import the pygame module
 # import sys module for exiting the window
 import pygame
@@ -5,10 +8,12 @@ import random
 # import some useful constants
 from pygame.locals import *
 
-# game map dimensions
+# GAME MAP DIMENSIONS
+# num pixels per tile
 TILESIZE = 40
-MAPWIDTH  = 3
-MAPHEIGHT = 6
+# num tiles wide and high
+MAPWIDTH  = 10
+MAPHEIGHT = 10
 
 # constants representing colors
 BLACK = (0,0,0)
@@ -20,27 +25,57 @@ WATER = 2
 COAL  = 3
 ROCK  = 4
 LAVA  = 5
+
+# constants representing rarity
+BASE_RARITY = 0
+VERY_COMMON = 30
+COMMON      = 45
+RARE        = 50
+VERY_RARE   = 53
+ULTRA_RARE  = 54
+
 # list of resources
 resources = [DIRT, GRASS, WATER, COAL, ROCK, LAVA]
 
-# dictionary linking resources to textures
+# dictionary(hash) linking resources to textures
 textures = {
-    DIRT  : pygame.image.load('DirtPixel.png'),
-    GRASS : pygame.image.load('GrassPixel.png'),
-    WATER : pygame.image.load('WaterPixel.png'),
-    COAL  : pygame.image.load('CoalPixel.png'),
-    ROCK  : pygame.image.load('RockPixel.png'),
-    LAVA  : pygame.image.load('LavaPixel.png')
+    DIRT  : pygame.image.load('Images/DirtPixel.png'),
+    GRASS : pygame.image.load('Images/GrassPixel.png'),
+    WATER : pygame.image.load('Images/WaterPixel.png'),
+    COAL  : pygame.image.load('Images/CoalPixel.png'),
+    ROCK  : pygame.image.load('Images/RockPixel.png'),
+    LAVA  : pygame.image.load('Images/LavaPixel.png')
 }
 
-tilemap = [ [random.choice(resources) for i in range(MAPWIDTH)] for j in range(MAPHEIGHT)]
 
-# initialise the pygame module
+# initialize pygame module
 pygame.init()
-# create a new drawing suftace, width, height
+# create new drawing suftace, mapwidth, mapheight
 DISPLAY_SURFACE = pygame.display.set_mode((MAPWIDTH*TILESIZE, MAPHEIGHT*TILESIZE))
 # caption window
 pygame.display.set_caption('Minecraft 2D')
+
+# randomly generate resources for map with frequency of occurance
+tilemap = [ [random.choice(resources) for i in range(MAPWIDTH)] for j in range(MAPHEIGHT)]
+for row in range(MAPHEIGHT):
+    for column in range(MAPWIDTH):
+        random_num = random.randint(BASE_RARITY, ULTRA_RARE)
+        if random_num < VERY_COMMON:
+            if (random_num % 3) == 0:
+                this_tile = ROCK
+            else:
+                this_tile = GRASS
+        if random_num >= VERY_COMMON and random_num < COMMON:
+            if (random_num % 2) == 0:
+                this_tile = WATER
+            else:
+                this_tile = DIRT
+        if random_num >= RARE and random_num < VERY_RARE:
+            if (random_num % 2) == 0:
+                this_tile = COAL
+            else:
+                this_tile = LAVA
+        tilemap[row][column] = this_tile
 
 # game loop
 while True:
