@@ -32,6 +32,11 @@ WATER = 2
 COAL  = 3
 ROCK  = 4
 LAVA  = 5
+WOOD  = 6
+FIRE  = 7
+SAND  = 8
+STONE = 9
+BRICK = 10
 # objects that are NOT resources
 CLOUD = 11
 
@@ -44,7 +49,7 @@ VERY_RARE   = 53
 ULTRA_RARE  = 54
 
 # list of resources
-resources = [DIRT, GRASS, WATER, COAL, ROCK, LAVA]
+resources = [DIRT, GRASS, WATER, COAL, ROCK, LAVA, WOOD, FIRE, SAND, STONE, BRICK]
 
 # dictionary(hash) linking resources to textures
 textures = {
@@ -54,6 +59,11 @@ textures = {
     COAL  : pygame.image.load('Images/CoalPixel.png'),
     ROCK  : pygame.image.load('Images/RockPixel.png'),
     LAVA  : pygame.image.load('Images/LavaPixel.png'),
+    WOOD  : pygame.image.load('Images/WoodPixel.png'),
+    FIRE  : pygame.image.load('Images/TorchPixel.png'),
+    SAND  : pygame.image.load('Images/SandPixel.png'),
+    STONE : pygame.image.load('Images/StonePixel.png'),
+    BRICK : pygame.image.load('Images/BrickPixel.png'),
     CLOUD : pygame.image.load('Images/CloudPixel.png')
 }
 
@@ -64,7 +74,36 @@ inventory = {
     WATER : 0,
     COAL  : 0,
     ROCK  : 0,
-    LAVA  : 0
+    LAVA  : 0,
+    WOOD  : 0,
+    FIRE  : 0,
+    SAND  : 0,
+    STONE : 0,
+    BRICK : 0
+}
+
+# recipes for crafting new resources
+craft = {
+    WOOD  : { DIRT:  2},
+    FIRE  : { WOOD:  2,  COAL: 1},
+    SAND  : { DIRT:  1,  ROCK: 1},
+    STONE : { ROCK:  2},
+    BRICK : { STONE: 1,  SAND: 1}
+}
+
+# maps each resource to number event keys used to place/craft the resource
+controls = {
+    DIRT  : 49,     # event 49 is 1 key
+    GRASS : 50,     # event 50 is 2 key
+    WATER : 51,     # event 51 is 3 key
+    COAL  : 52,     # event 52 is 4 key
+    ROCK  : 53,     # event 53 is 5 key
+    LAVA  : 54,     # event 54 is 6 key
+    WOOD  : 55,     # event 54 is 7 key
+    FIRE  : 56,     # event 55 is 8 key
+    SAND  : 57,     # event 56 is 9 key
+    STONE : 48,     # event 57 is 0 key
+    BRICK : 45      # event 49 is - key
 }
 
 # initialize pygame module
@@ -120,16 +159,14 @@ cloud_x_pos = [-200, -500, -1000]
 cloud_y_pos = [random.randint(0, MAPHEIGHT*TILESIZE - 1), random.randint(0, MAPHEIGHT*TILESIZE - 1), random.randint(0, MAPHEIGHT*TILESIZE - 1)]
 
 
-# game loop
+# GAME LOOP
 while True:
-
     # clear screen
     DISPLAY_SURFACE.fill(BLACK)
 
     # EVENTS
     # get user events
     for event in pygame.event.get():
-        # print(event)
         # if the user wants to quit
         if event.type == QUIT:
             # end game and close window
@@ -161,55 +198,41 @@ while True:
                 inventory[this_tile] +=1
                 # player is now standing on dirt
                 tilemap[player_position[1]][player_position[0]] = DIRT
-                print (inventory)
 
             # PLACE RESOURCES FROM INVENTORY. SWAP WITH RESOURCE WHERE PLAYER STANDING
-            # place dirt
-            elif (event.key == K_1):
-                # get tile to swap with dirt
-                standing_tile = tilemap[player_position[1]][player_position[0]]
-                # if there is dirt in inventory
-                if inventory[DIRT] > 0:
-                    # remove dirt and place it
-                    inventory[DIRT] -= 1
-                    tilemap[player_position[1]][player_position[0]] = DIRT
-                    # swap with prev tile
-                    inventory[standing_tile] += 1
-            # place grass
-            elif (event.key == K_2):
-                # if there is grass in inventory
-                if inventory[GRASS] > 0:
-                    # get tile to swap with grass
-                    standing_tile = tilemap[player_position[1]][player_position[0]]
-                    # remove grass and place it
-                    inventory[GRASS] -= 1
-                    tilemap[player_position[1]][player_position[0]] = GRASS
-                    # swap with prev tile
-                    inventory[standing_tile] += 1
-            # place water
-            elif (event.key == K_3):
-                # if there is water in inventory
-                if inventory[WATER] > 0:
-                    # get tile to swap with water
-                    standing_tile = tilemap[player_position[1]][player_position[0]]
-                    # remove water and place it
-                    inventory[WATER] -= 1
-                    tilemap[player_position[1]][player_position[0]] = WATER
-                    # swap with prev tile
-                    inventory[standing_tile] += 1
-            # place ROCK
-            elif (event.key == K_5):
-                # if there is ROCK in inventory
-                if inventory[ROCK] > 0:
-                    # get tile to swap with ROCK
-                    standing_tile = tilemap[player_position[1]][player_position[0]]
-                    # remove ROCK and place it
-                    inventory[ROCK] -= 1
-                    tilemap[player_position[1]][player_position[0]] = ROCK
-                    # swap with prev tile
-                    inventory[standing_tile] += 1
-
-
+            for key in controls:
+                # place/craft item key pressed
+                if (event.key == controls[key]):
+                    # if craft key pressed
+                    if key in craft:
+                        # initialize to true
+                        canBeMade = True
+                        # check to see if there are enough resources in inventory to craft item
+                        for each in craft[key]:
+                            # if not enough resources in inventory
+                            if craft[key][each] > inventory[each]:
+                                # cannot craft item
+                                canBeMade = False
+                                break
+                        # if enought available resources, craft item
+                        if canBeMade == True:
+                            # remove each ingredient from craft recipe
+                            for i in craft[key]:
+                                inventory[i] -= craft[key][i]
+                            # add crafted item to inventory
+                            inventory[key] += 1
+                    # else place item of key pressed
+                    else:
+                        # if there is at least one item in inventory
+                        if inventory[key] > 0:
+                            # get tile to swap with item
+                            standing_tile = tilemap[player_position[1]][player_position[0]]
+                            # increase inventory by standing tile
+                            inventory[standing_tile] += 1
+                            # remove item to place from inventory
+                            inventory[key] -= 1
+                            # place item from inventory
+                            tilemap[player_position[1]][player_position[0]] = key
 
     # DISPLAY UPDATED MAP
     # loop through each row
@@ -237,7 +260,6 @@ while True:
     # DISPLAY PLAYER AT LOCATION
     DISPLAY_SURFACE.blit(PLAYER, (player_position[0]*TILESIZE, player_position[1]*TILESIZE))
 
-
     # DISPLAY CLOUDS
     for each in range(len(cloud_x_pos)):
         DISPLAY_SURFACE.blit(textures[CLOUD], (cloud_x_pos[each], cloud_y_pos[each]))
@@ -247,11 +269,12 @@ while True:
         if cloud_x_pos[each] > MAPWIDTH*TILESIZE:
             # randomly pick a new position to place the cloud
             # fixed x offscreen
-            cloud_x_pos[each] = -300
+            cloud_x_pos[each] = -random.randint(0, 450)
             # random y pos
             cloud_y_pos[each] = random.randint(0, MAPHEIGHT*TILESIZE - 1)
-
 
     # UPDATE WINDOW
     pygame.display.update()
     fpsClock.tick(24)
+
+#END WHILE LOOP
