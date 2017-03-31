@@ -8,6 +8,8 @@ import random
 # import some useful constants
 from pygame.locals import *
 
+fpsClock = pygame.time.Clock()
+
 # GAME MAP DIMENSIONS
 # num pixels per tile
 TILESIZE = 40
@@ -22,15 +24,18 @@ PADDING = TILESIZE/2
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 
-# constants representing resources
+# CONSTANTS REPRESENTING OBJECTS
+# resources
 DIRT  = 0
 GRASS = 1
 WATER = 2
 COAL  = 3
 ROCK  = 4
 LAVA  = 5
+# objects that are NOT resources
+CLOUD = 11
 
-# constants representing rarity
+# CONSTANTS REPRESENTING RARITY
 BASE_RARITY = 0
 VERY_COMMON = 30
 COMMON      = 45
@@ -48,16 +53,28 @@ textures = {
     WATER : pygame.image.load('Images/WaterPixel.png'),
     COAL  : pygame.image.load('Images/CoalPixel.png'),
     ROCK  : pygame.image.load('Images/RockPixel.png'),
-    LAVA  : pygame.image.load('Images/LavaPixel.png')
+    LAVA  : pygame.image.load('Images/LavaPixel.png'),
+    CLOUD : pygame.image.load('Images/CloudPixel.png')
 }
 
+# player resource inventory
+inventory = {
+    DIRT  : 0,
+    GRASS : 0,
+    WATER : 0,
+    COAL  : 0,
+    ROCK  : 0,
+    LAVA  : 0
+}
 
 # initialize pygame module
 pygame.init()
 # create new drawing suftace, mapwidth, mapheight
 DISPLAY_SURFACE = pygame.display.set_mode((MAPWIDTH*TILESIZE, MAPHEIGHT*TILESIZE + INVHEIGHT))
 # caption window
-pygame.display.set_caption('Minecraft 2D')
+pygame.display.set_caption('M I N E C R A F T -- 2 D')
+
+pygame.display.set_icon(pygame.image.load('Images/Megaman_Player.gif'))
 
 # randomly generate resources for map based on rarity of each resource
 tilemap = [ [GRASS for i in range(MAPWIDTH)] for j in range(MAPHEIGHT)]
@@ -88,27 +105,28 @@ for row in range(MAPHEIGHT):
         # save tile to map
         tilemap[row][column] = this_tile
 
-
-# player resource inventory
-inventory = {
-    DIRT  : 0,
-    GRASS : 0,
-    WATER : 0,
-    COAL  : 0,
-    ROCK  : 0,
-    LAVA  : 0
-}
-
+# load font style and size
 INVFONT = pygame.font.Font('Fonts/freesansbold.ttf', 18)
 
-# the player
+# PLAYER
 PLAYER = pygame.image.load('Images/Megaman_Player.gif')
 # randomly place the player (initially)
 player_position = [random.randint(0, MAPWIDTH - 1), random.randint(0, MAPHEIGHT - 1)]
 
+#CLOUD POSITION
+# fixed x offscreen
+cloud_x_pos = [-200, -500, -1000]
+# random y pos
+cloud_y_pos = [random.randint(0, MAPHEIGHT*TILESIZE - 1), random.randint(0, MAPHEIGHT*TILESIZE - 1), random.randint(0, MAPHEIGHT*TILESIZE - 1)]
+
+
 # game loop
 while True:
 
+    # clear screen
+    DISPLAY_SURFACE.fill(BLACK)
+
+    # EVENTS
     # get user events
     for event in pygame.event.get():
         # print(event)
@@ -145,6 +163,7 @@ while True:
                 tilemap[player_position[1]][player_position[0]] = DIRT
                 print (inventory)
 
+            # PLACE RESOURCES FROM INVENTORY. SWAP WITH RESOURCE WHERE PLAYER STANDING
             # place dirt
             elif (event.key == K_1):
                 # get tile to swap with dirt
@@ -156,16 +175,49 @@ while True:
                     tilemap[player_position[1]][player_position[0]] = DIRT
                     # swap with prev tile
                     inventory[standing_tile] += 1
+            # place grass
+            elif (event.key == K_2):
+                # if there is grass in inventory
+                if inventory[GRASS] > 0:
+                    # get tile to swap with grass
+                    standing_tile = tilemap[player_position[1]][player_position[0]]
+                    # remove grass and place it
+                    inventory[GRASS] -= 1
+                    tilemap[player_position[1]][player_position[0]] = GRASS
+                    # swap with prev tile
+                    inventory[standing_tile] += 1
+            # place water
+            elif (event.key == K_3):
+                # if there is water in inventory
+                if inventory[WATER] > 0:
+                    # get tile to swap with water
+                    standing_tile = tilemap[player_position[1]][player_position[0]]
+                    # remove water and place it
+                    inventory[WATER] -= 1
+                    tilemap[player_position[1]][player_position[0]] = WATER
+                    # swap with prev tile
+                    inventory[standing_tile] += 1
+            # place ROCK
+            elif (event.key == K_5):
+                # if there is ROCK in inventory
+                if inventory[ROCK] > 0:
+                    # get tile to swap with ROCK
+                    standing_tile = tilemap[player_position[1]][player_position[0]]
+                    # remove ROCK and place it
+                    inventory[ROCK] -= 1
+                    tilemap[player_position[1]][player_position[0]] = ROCK
+                    # swap with prev tile
+                    inventory[standing_tile] += 1
 
+
+
+    # DISPLAY UPDATED MAP
     # loop through each row
     for row in range(MAPHEIGHT):
         # loop through each column
         for column in range(MAPWIDTH):
             # draw color(RGB) and (x, y, width, height)
             DISPLAY_SURFACE.blit(textures[tilemap[row][column]], (column*TILESIZE, row*TILESIZE))
-
-    # display player at correct location
-    DISPLAY_SURFACE.blit(PLAYER, (player_position[0]*TILESIZE, player_position[1]*TILESIZE))
 
     # DISPLAY INVENTORY
     # set inventory positions
@@ -182,10 +234,24 @@ while True:
         # padding between resources
         inventory_x_position += PADDING*2
 
+    # DISPLAY PLAYER AT LOCATION
+    DISPLAY_SURFACE.blit(PLAYER, (player_position[0]*TILESIZE, player_position[1]*TILESIZE))
 
 
+    # DISPLAY CLOUDS
+    for each in range(len(cloud_x_pos)):
+        DISPLAY_SURFACE.blit(textures[CLOUD], (cloud_x_pos[each], cloud_y_pos[each]))
+        # move cloud to right slightly
+        cloud_x_pos[each] += 1
+        # once cloud moves to end of map
+        if cloud_x_pos[each] > MAPWIDTH*TILESIZE:
+            # randomly pick a new position to place the cloud
+            # fixed x offscreen
+            cloud_x_pos[each] = -300
+            # random y pos
+            cloud_y_pos[each] = random.randint(0, MAPHEIGHT*TILESIZE - 1)
 
 
-
-    # update the display
+    # UPDATE WINDOW
     pygame.display.update()
+    fpsClock.tick(24)
