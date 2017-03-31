@@ -84,11 +84,12 @@ for row in range(MAPHEIGHT):
         tilemap[row][column] = this_tile
 
 
+# player resource inventory
 inventory = {
-    DIRT  : 0
-    GRASS : 0
-    WATER : 0
-    COAL  : 0
+    DIRT  : 0,
+    GRASS : 0,
+    WATER : 0,
+    COAL  : 0,
     ROCK  : 0
 }
 
@@ -126,8 +127,15 @@ while True:
             elif (event.key == K_DOWN) and (player_position[1] < MAPHEIGHT - 1):
                 # player move down
                 player_position[1] +=1
-
-
+            # space bar key
+            elif (event.key == K_SPACE):
+                # tile player is standing on
+                this_tile = tilemap[player_position[1]][player_position[0]]
+                # add resource to inventory
+                inventory[this_tile] +=1
+                # player is now standing on dirt
+                tilemap[player_position[1]][player_position[0]] = DIRT
+                print (inventory)
     # loop through each row
     for row in range(MAPHEIGHT):
         # loop through each column
