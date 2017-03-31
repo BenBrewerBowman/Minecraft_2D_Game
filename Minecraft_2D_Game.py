@@ -8,6 +8,7 @@ import random
 # import some useful constants
 from pygame.locals import *
 
+# frames per second clock (cloud transitions)
 fpsClock = pygame.time.Clock()
 
 # GAME MAP DIMENSIONS
@@ -39,14 +40,6 @@ STONE = 9
 BRICK = 10
 # objects that are NOT resources
 CLOUD = 11
-
-# CONSTANTS REPRESENTING RARITY
-BASE_RARITY = 0
-VERY_COMMON = 30
-COMMON      = 45
-RARE        = 50
-VERY_RARE   = 53
-ULTRA_RARE  = 54
 
 # list of resources
 resources = [DIRT, GRASS, WATER, COAL, ROCK, LAVA, WOOD, FIRE, SAND, STONE, BRICK]
@@ -106,6 +99,14 @@ controls = {
     BRICK : 45      # event 49 is - key
 }
 
+# CONSTANTS REPRESENTING RARITY
+BASE_RARITY = 0
+VERY_COMMON = 30
+COMMON      = 45
+RARE        = 50
+VERY_RARE   = 53
+ULTRA_RARE  = 54
+
 # initialize pygame module
 pygame.init()
 # create new drawing suftace, mapwidth, mapheight
@@ -115,7 +116,7 @@ pygame.display.set_caption('M I N E C R A F T -- 2 D')
 
 pygame.display.set_icon(pygame.image.load('Images/Megaman_Player.gif'))
 
-# randomly generate resources for map based on rarity of each resource
+# RANDOMLY GENERATE RESOURCES FOR MAP BASED ON RARITY
 tilemap = [ [GRASS for i in range(MAPWIDTH)] for j in range(MAPHEIGHT)]
 for row in range(MAPHEIGHT):
     for column in range(MAPWIDTH):
@@ -213,7 +214,6 @@ while True:
                             if craft[key][each] > inventory[each]:
                                 # cannot craft item
                                 canBeMade = False
-                                break
                         # if enought available resources, craft item
                         if canBeMade == True:
                             # remove each ingredient from craft recipe
@@ -221,7 +221,7 @@ while True:
                                 inventory[i] -= craft[key][i]
                             # add crafted item to inventory
                             inventory[key] += 1
-                    # else place item of key pressed
+                    # place item of key pressed
                     else:
                         # if there is at least one item in inventory
                         if inventory[key] > 0:
@@ -243,9 +243,10 @@ while True:
             DISPLAY_SURFACE.blit(textures[tilemap[row][column]], (column*TILESIZE, row*TILESIZE))
 
     # DISPLAY INVENTORY
-    # set inventory positions
+    # set inventory positions on screen
     inventory_x_position = PADDING
     inventory_y_position = MAPHEIGHT*TILESIZE + PADDING
+    # for each inventory item available
     for item in resources:
         # add image of resource
         DISPLAY_SURFACE.blit(textures[item], (inventory_x_position, inventory_y_position))
@@ -261,14 +262,16 @@ while True:
     DISPLAY_SURFACE.blit(PLAYER, (player_position[0]*TILESIZE, player_position[1]*TILESIZE))
 
     # DISPLAY CLOUDS
+    # display each instance of a cloud
     for each in range(len(cloud_x_pos)):
+        # display cloud on screen
         DISPLAY_SURFACE.blit(textures[CLOUD], (cloud_x_pos[each], cloud_y_pos[each]))
         # move cloud to right slightly
         cloud_x_pos[each] += 1
         # once cloud moves to end of map
         if cloud_x_pos[each] > MAPWIDTH*TILESIZE:
-            # randomly pick a new position to place the cloud
-            # fixed x offscreen
+            # randomly pick a new position to place the cloud (clouds in random frequency and position)
+            # random x distance offscreen
             cloud_x_pos[each] = -random.randint(0, 450)
             # random y pos
             cloud_y_pos[each] = random.randint(0, MAPHEIGHT*TILESIZE - 1)
