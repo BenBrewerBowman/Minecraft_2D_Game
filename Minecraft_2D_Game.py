@@ -12,11 +12,15 @@ from pygame.locals import *
 # num pixels per tile
 TILESIZE = 40
 # num tiles wide and high
-MAPWIDTH  = 10
-MAPHEIGHT = 10
+MAPWIDTH  = 20
+MAPHEIGHT = 20
+# num pixels for inventory screen size
+INVHEIGHT = 2*TILESIZE
+PADDING = TILESIZE/2
 
 # constants representing colors
 BLACK = (0,0,0)
+WHITE = (255,255,255)
 
 # constants representing resources
 DIRT  = 0
@@ -51,7 +55,7 @@ textures = {
 # initialize pygame module
 pygame.init()
 # create new drawing suftace, mapwidth, mapheight
-DISPLAY_SURFACE = pygame.display.set_mode((MAPWIDTH*TILESIZE, MAPHEIGHT*TILESIZE))
+DISPLAY_SURFACE = pygame.display.set_mode((MAPWIDTH*TILESIZE, MAPHEIGHT*TILESIZE + INVHEIGHT))
 # caption window
 pygame.display.set_caption('Minecraft 2D')
 
@@ -60,6 +64,7 @@ tilemap = [ [GRASS for i in range(MAPWIDTH)] for j in range(MAPHEIGHT)]
 for row in range(MAPHEIGHT):
     for column in range(MAPWIDTH):
         random_num = random.randint(BASE_RARITY, ULTRA_RARE)
+        this_tile = GRASS
         # very common resource
         if random_num < VERY_COMMON:
             if (random_num % 3) == 0:
@@ -67,13 +72,13 @@ for row in range(MAPHEIGHT):
             else:
                 this_tile = GRASS
         # common resource
-        if random_num >= VERY_COMMON and random_num < COMMON:
+        elif random_num >= VERY_COMMON and random_num < COMMON:
             if (random_num % 2) == 0:
                 this_tile = WATER
             else:
                 this_tile = DIRT
         # rare resource
-        if random_num >= RARE and random_num < VERY_RARE:
+        elif random_num >= RARE and random_num < VERY_RARE:
             if (random_num % 2) == 0:
                 this_tile = COAL
             else:
@@ -90,13 +95,16 @@ inventory = {
     GRASS : 0,
     WATER : 0,
     COAL  : 0,
-    ROCK  : 0
+    ROCK  : 0,
+    LAVA  : 0
 }
+
+INVFONT = pygame.font.Font('Fonts/freesansbold.ttf', 18)
 
 # the player
 PLAYER = pygame.image.load('Images/Megaman_Player.gif')
 # randomly place the player (initially)
-player_position = [random.randint(0, MAPWIDTH), random.randint(0, MAPHEIGHT)]
+player_position = [random.randint(0, MAPWIDTH - 1), random.randint(0, MAPHEIGHT - 1)]
 
 # game loop
 while True:
@@ -136,6 +144,19 @@ while True:
                 # player is now standing on dirt
                 tilemap[player_position[1]][player_position[0]] = DIRT
                 print (inventory)
+
+            # place dirt
+            elif (event.key == K_1):
+                # get tile to swap with dirt
+                standing_tile = tilemap[player_position[1]][player_position[0]]
+                # if there is dirt in inventory
+                if inventory[DIRT] > 0:
+                    # remove dirt and place it
+                    inventory[DIRT] -= 1
+                    tilemap[player_position[1]][player_position[0]] = DIRT
+                    # swap with prev tile
+                    inventory[standing_tile] += 1
+
     # loop through each row
     for row in range(MAPHEIGHT):
         # loop through each column
@@ -145,5 +166,26 @@ while True:
 
     # display player at correct location
     DISPLAY_SURFACE.blit(PLAYER, (player_position[0]*TILESIZE, player_position[1]*TILESIZE))
+
+    # DISPLAY INVENTORY
+    # set inventory positions
+    inventory_x_position = PADDING
+    inventory_y_position = MAPHEIGHT*TILESIZE + PADDING
+    for item in resources:
+        # add image of resource
+        DISPLAY_SURFACE.blit(textures[item], (inventory_x_position, inventory_y_position))
+        # padding for text
+        inventory_x_position += PADDING
+        # add txt amt in inventory and display it
+        numInventoryText = INVFONT.render(str(inventory[item]), True, WHITE, BLACK)
+        DISPLAY_SURFACE.blit(numInventoryText, (inventory_x_position, inventory_y_position))
+        # padding between resources
+        inventory_x_position += PADDING*2
+
+
+
+
+
+
     # update the display
     pygame.display.update()
