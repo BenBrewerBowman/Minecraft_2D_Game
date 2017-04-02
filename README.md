@@ -12,4 +12,5 @@ In this games, user can move around map and can aquire various resources. User c
 - Crafting ability to create other resources.
 
 Minecraft-2D tutorial: http://usingpython.com/pygame-intro/
+
 Instructions for installing pygame: http://www.pygame.org/download.shtml
